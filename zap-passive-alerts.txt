@@ -1,0 +1,122 @@
+# OWASP ZAP Passive Scan Alerts — testphp.vulnweb.com
+# Tool: OWASP ZAP 2.14.0 — Passive Scan Only (no active attacks)
+# Date: April 13, 2025
+# Mode: Automated Scan → Spider → Passive Analysis
+# Note: Active Scan was NOT run. All findings are from passive observation.
+# ─────────────────────────────────────────────────────────────────
+
+SPIDER SUMMARY
+  URLs found    : 47
+  Forms found   : 8
+  Total requests: 52 (HEAD/GET only)
+
+# ─────────────────────────────────────────────────────────────────
+# ALERTS — HIGH RISK
+# ─────────────────────────────────────────────────────────────────
+
+[HIGH] Content Security Policy (CSP) Header Not Set
+  Plugin ID   : 10038
+  Risk        : High
+  Confidence  : High
+  URL         : http://testphp.vulnweb.com/
+  Description : Content Security Policy (CSP) is an added layer of security
+                that helps to detect and mitigate certain types of attacks,
+                including Cross Site Scripting (XSS) and data injection attacks.
+  Evidence    : No Content-Security-Policy header found in response.
+  Solution    : Ensure that your web server, application server, load balancer,
+                etc. is configured to set the Content-Security-Policy header.
+  Reference   : https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP
+
+[HIGH] X-Frame-Options Header Not Set
+  Plugin ID   : 10020
+  Risk        : Medium (ZAP) / Medium (this assessment)
+  URL         : http://testphp.vulnweb.com/
+  Evidence    : No X-Frame-Options header found.
+  Solution    : Most modern Web browsers support the X-Frame-Options HTTP header.
+                Ensure it is set on all web pages returned by your site.
+
+# ─────────────────────────────────────────────────────────────────
+# ALERTS — MEDIUM RISK
+# ─────────────────────────────────────────────────────────────────
+
+[MEDIUM] Cookie Without HttpOnly Flag
+  Plugin ID   : 10010
+  Risk        : Medium
+  Confidence  : Medium
+  URL         : http://testphp.vulnweb.com/
+  Cookie      : PHPSESSID
+  Evidence    : Set-Cookie: PHPSESSID=3a8f2c1d9e74b5a0; path=/
+                HttpOnly flag not set.
+  Solution    : Ensure that the HttpOnly flag is set for all cookies.
+
+[MEDIUM] Cookie Without Secure Flag
+  Plugin ID   : 10011
+  Risk        : Medium
+  Confidence  : Medium
+  URL         : http://testphp.vulnweb.com/
+  Cookie      : PHPSESSID
+  Evidence    : Set-Cookie: PHPSESSID=3a8f2c1d9e74b5a0; path=/
+                Secure flag not set.
+  Solution    : Whenever a cookie contains sensitive information or is a session
+                token, then it should always be passed using an encrypted channel.
+
+[MEDIUM] Server Leaks Version Information via "Server" HTTP Response Header Field
+  Plugin ID   : 10036
+  Risk        : Medium (Low impact but Medium due to version specificity)
+  URL         : http://testphp.vulnweb.com/
+  Evidence    : Server: Apache/2.4.7 (Ubuntu)
+  Solution    : Ensure that your web server, application server, load balancer,
+                etc. is configured to suppress the "Server" header or provide
+                generic information.
+
+[MEDIUM] X-Content-Type-Options Header Missing
+  Plugin ID   : 10021
+  Risk        : Medium
+  URL         : http://testphp.vulnweb.com/
+  Evidence    : Header not present in response.
+  Solution    : Ensure that the application/web server sets the Content-Type
+                header appropriately, and that it sets the X-Content-Type-Options
+                header to 'nosniff' for all web pages.
+
+# ─────────────────────────────────────────────────────────────────
+# ALERTS — LOW RISK
+# ─────────────────────────────────────────────────────────────────
+
+[LOW] Timestamp Disclosure - Unix
+  Plugin ID   : 10096
+  Risk        : Low
+  URL         : http://testphp.vulnweb.com/artists.php
+  Evidence    : 1710288000 (Unix timestamp found in response body)
+  Solution    : Manually confirm if the timestamp data is sensitive, and whether
+                it is exposed unnecessarily.
+
+[LOW] Absence of Anti-CSRF Tokens
+  Plugin ID   : 10202
+  Risk        : Low (requires further active testing to confirm exploitability)
+  URL         : http://testphp.vulnweb.com/guestbook.php
+  Evidence    : No anti-CSRF token found in form submission.
+  Note        : Passive scan cannot confirm exploitability. Active testing
+                (out of scope for this assessment) would be needed to verify.
+
+[LOW] Information Disclosure - Debug Error Messages
+  Plugin ID   : 10023
+  Risk        : Low
+  URL         : http://testphp.vulnweb.com/artists.php?artist=0
+  Evidence    : Warning: mysql_fetch_array() expects parameter 1 to be resource,
+                boolean given in /var/www/html/artists.php on line 62
+  Solution    : Disable debug messages and ensure errors are logged server-side
+                only: display_errors = Off in php.ini
+
+# ─────────────────────────────────────────────────────────────────
+# SCAN SUMMARY
+# ─────────────────────────────────────────────────────────────────
+
+Total Alerts  : 8
+  High        : 2
+  Medium      : 4
+  Low         : 2
+  Informational: 3 (not listed above — minor HTTP method exposure notes)
+
+Scan Type     : Passive only — no active attacks performed
+Scan Duration : 4 minutes 22 seconds
+ZAP Version   : 2.14.0

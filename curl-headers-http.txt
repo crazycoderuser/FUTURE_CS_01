@@ -1,0 +1,70 @@
+# HTTP Header Evidence — testphp.vulnweb.com (Port 80)
+# Command: curl -I http://testphp.vulnweb.com
+# Date: April 13, 2025 10:52 IST
+# ─────────────────────────────────────────────────────────────────
+
+HTTP/1.1 200 OK
+Date: Sun, 13 Apr 2025 05:22:11 GMT
+Server: Apache/2.4.7 (Ubuntu)                          [RISK: HIGH — version exposed]
+X-Powered-By: PHP/5.6.40                               [RISK: HIGH — PHP EOL version exposed]
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+Set-Cookie: PHPSESSID=3a8f2c1d9e74b5a0; path=/      [RISK: MEDIUM — no HttpOnly, no Secure]
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+
+# ─────────────────────────────────────────────────────────────────
+# MISSING SECURITY HEADERS (each absence is a finding)
+# ─────────────────────────────────────────────────────────────────
+
+Content-Security-Policy     : [ABSENT]   → Finding F-02, CVSS 7.4, Risk: HIGH
+Strict-Transport-Security   : [ABSENT]   → Finding F-05, CVSS 6.1, Risk: MEDIUM
+X-Frame-Options             : [ABSENT]   → Finding F-06, CVSS 5.4, Risk: MEDIUM
+X-Content-Type-Options      : [ABSENT]   → MEDIUM
+Referrer-Policy             : [ABSENT]   → Finding F-09, CVSS 3.1, Risk: LOW
+Permissions-Policy          : [ABSENT]   → Risk: LOW
+
+# ─────────────────────────────────────────────────────────────────
+# PRESENT BUT PROBLEMATIC HEADERS
+# ─────────────────────────────────────────────────────────────────
+
+Server: Apache/2.4.7 (Ubuntu)
+  Issue   : Exact version and OS disclosed. Enables targeted CVE lookup.
+  Fix     : ServerTokens Prod  (shows "Apache" only, no version)
+
+X-Powered-By: PHP/5.6.40
+  Issue   : PHP 5.6 reached end-of-life December 2018. Has 20+ known
+            unpatched CVEs. Version disclosure makes this critical.
+  Fix     : Header unset X-Powered-By  (in Apache config)
+            AND upgrade to PHP 8.2 minimum.
+
+Set-Cookie: PHPSESSID=...; path=/
+  Issue   : Cookie lacks HttpOnly flag (JavaScript can read the session token)
+            Cookie lacks Secure flag (sent over HTTP connections)
+            Cookie lacks SameSite attribute (CSRF risk)
+  Fix     : php.ini: session.cookie_httponly = 1
+                     session.cookie_secure = 1
+                     session.cookie_samesite = Strict
+
+# ─────────────────────────────────────────────────────────────────
+# securityheaders.com GRADING OUTPUT
+# ─────────────────────────────────────────────────────────────────
+
+URL Tested    : http://testphp.vulnweb.com
+Overall Grade : F
+
+Header Checks:
+  Content-Security-Policy     : ✗ Missing
+  X-Frame-Options             : ✗ Missing
+  X-Content-Type-Options      : ✗ Missing
+  Referrer-Policy             : ✗ Missing
+  Permissions-Policy          : ✗ Missing
+  Strict-Transport-Security   : ✗ Missing (also not applicable on HTTP)
+  X-XSS-Protection            : ✗ Missing (deprecated but flagged)
+
+Informational:
+  Server                      : Apache/2.4.7 (Ubuntu)  ← Information leakage
+  X-Powered-By                : PHP/5.6.40              ← Information leakage
+
+Summary: 0 / 7 security headers present. Immediate action required.

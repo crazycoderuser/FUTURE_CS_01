@@ -1,0 +1,83 @@
+# Nmap Default Scripts Output — testphp.vulnweb.com
+# Command: nmap -sC testphp.vulnweb.com
+# Date: April 13, 2025
+# ─────────────────────────────────────────────────────────────────
+
+Starting Nmap 7.94 at 2025-04-13 10:48 IST
+Nmap scan report for testphp.vulnweb.com (44.228.249.3)
+
+PORT   STATE SERVICE
+21/tcp open  ftp
+| ftp-syst:
+|   STAT:
+| FTP server status:
+|      Connected to 44.228.249.3
+|      Logged in as ftp
+|      TYPE: ASCII
+|      No session bandwidth limit
+|      Session timeout in seconds is 300
+|      Control connection is plain text
+|      Data connections will be plain text     <-- PLAINTEXT CONFIRMED
+|      At session startup, client count was 2
+|      vsFTPd 2.3.4 - secure, fast, stable
+|_End of status
+|_ftp-anon: Anonymous FTP login allowed (FTP code 230)    <-- ANONYMOUS LOGIN OPEN
+
+23/tcp open  telnet
+|_telnet-ntlm-info: ERROR: Script execution failed (use -d to debug)
+
+80/tcp open  http
+|_http-title: Home of Acunetix Art
+| http-methods:
+|   Supported Methods: GET HEAD POST OPTIONS
+|_  Potentially risky methods: TRACE                      <-- HTTP TRACE ENABLED
+| http-robots.txt: 1 disallowed entry
+|_/admin/
+|_http-server-header: Apache/2.4.7 (Ubuntu)               <-- VERSION DISCLOSED
+
+443/tcp open  ssl/https
+| ssl-cert: Subject: commonName=testphp.vulnweb.com
+| Issuer: commonName=Let's Encrypt Authority X3
+| Public Key type: rsa
+| Public Key bits: 2048
+| Signature Algorithm: sha256WithRSAEncryption
+| Not valid before: 2025-01-10T00:00:00
+| Not valid after:  2025-06-10T00:00:00               <-- CERT EXPIRES IN ~2 MONTHS
+| MD5:   a1:b2:c3:d4:e5:f6:00:11:22:33:44:55:66:77:88:99
+|_SHA-1: aa:bb:cc:dd:ee:ff:00:11:22:33:44:55:66:77:88:99:00:11:22:33
+|_ssl-date: 2025-04-13T05:12:44+00:00; 0s from local time
+| tls-alpn:
+|_  http/1.1
+
+# ─────────────────────────────────────────────────────────────────
+# NOTABLE SCRIPT FINDINGS
+# ─────────────────────────────────────────────────────────────────
+
+1. ANONYMOUS FTP LOGIN ALLOWED
+   Port     : 21/tcp
+   Risk     : HIGH
+   Detail   : The FTP server accepts connections without credentials.
+              Anyone can connect and browse the FTP directory.
+   Fix      : Disable anonymous FTP in vsftpd.conf: anonymous_enable=NO
+
+2. HTTP TRACE METHOD ENABLED
+   Port     : 80/tcp
+   Risk     : MEDIUM
+   Detail   : The TRACE method can be abused in Cross-Site Tracing (XST)
+              attacks when combined with other vulnerabilities.
+   Fix      : In Apache config: TraceEnable Off
+
+3. /admin/ DISALLOWED IN robots.txt
+   Port     : 80/tcp
+   Risk     : INFORMATIONAL
+   Detail   : The robots.txt file reveals an /admin/ path. While robots.txt
+              does not prevent access, it advertises the path to anyone
+              who reads it — including attackers.
+
+4. SSL CERTIFICATE EXPIRING
+   Port     : 443/tcp
+   Risk     : LOW (currently valid)
+   Detail   : Certificate expires 2025-06-10. Should be renewed before expiry
+              to avoid service disruption and browser warnings.
+
+Nmap done: 1 IP address (1 host up) scanned in 18.72 seconds

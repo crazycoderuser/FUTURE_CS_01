@@ -1,0 +1,20 @@
+# HTTPS Header Evidence — testphp.vulnweb.com (Port 443)
+# Command: curl -I https://testphp.vulnweb.com
+# Date: April 13, 2025 10:55 IST
+# ─────────────────────────────────────────────────────────────────
+
+HTTP/1.1 200 OK
+Date: Sun, 13 Apr 2025 05:25:44 GMT
+Server: Apache/2.4.7 (Ubuntu)
+X-Powered-By: PHP/5.6.40
+Expires: Thu, 19 Nov 1981 08:52:00 GMT
+Cache-Control: no-store, no-cache, must-revalidate, post-check=0, pre-check=0
+Pragma: no-cache
+Set-Cookie: PHPSESSID=7c4e9f2a1b83d560; path=/     [NO HttpOnly, NO Secure, NO SameSite]
+Content-Type: text/html; charset=UTF-8
+Connection: keep-alive
+
+# Same missing headers as HTTP — security posture unchanged on HTTPS.
+# Strict-Transport-Security is NOT present on the HTTPS response.
+# This means even visitors who connect via HTTPS are not instructed to
+# always use HTTPS in future — downgrade attacks remain possible.

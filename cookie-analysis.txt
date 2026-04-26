@@ -1,0 +1,69 @@
+# Cookie Security Analysis — testphp.vulnweb.com
+# Tool: Chrome DevTools (F12 → Application → Cookies)
+# Date: April 13, 2025
+# Method: GET request to http://testphp.vulnweb.com — browser inspection
+# ─────────────────────────────────────────────────────────────────
+
+# RAW Set-Cookie HEADER FROM HTTP RESPONSE
+# ─────────────────────────────────────────────────────────────────
+
+Set-Cookie: PHPSESSID=3a8f2c1d9e74b5a0; path=/
+
+# ─────────────────────────────────────────────────────────────────
+# ATTRIBUTE ANALYSIS
+# ─────────────────────────────────────────────────────────────────
+
+Cookie Name   : PHPSESSID
+Cookie Value  : 3a8f2c1d9e74b5a0  (PHP session identifier)
+Path          : /
+Domain        : [not set — defaults to testphp.vulnweb.com]
+
+HttpOnly      : FALSE  ✗  VULNERABILITY
+  Impact: JavaScript code running on this page can read the session token
+          via document.cookie. If any XSS vulnerability exists anywhere on
+          the site, an attacker can steal this token and impersonate the
+          logged-in user (session hijacking).
+
+Secure        : FALSE  ✗  VULNERABILITY
+  Impact: The session cookie is sent over both HTTP and HTTPS connections.
+          If a visitor accesses the site over HTTP (unencrypted), the session
+          token travels in plaintext and can be intercepted on the same network
+          (e.g., public Wi-Fi man-in-the-middle attack).
+
+SameSite      : [NOT SET]  ✗  VULNERABILITY
+  Impact: Without SameSite=Strict or SameSite=Lax, the browser will include
+          this cookie in cross-site requests. This enables Cross-Site Request
+          Forgery (CSRF) attacks where a malicious third-party site can trigger
+          actions on behalf of the logged-in user.
+
+Expiry        : [SESSION] — expires when browser closes (acceptable)
+
+# ─────────────────────────────────────────────────────────────────
+# RISK CLASSIFICATION
+# ─────────────────────────────────────────────────────────────────
+
+Finding ID    : F-07
+Risk Level    : MEDIUM
+CVSS Score    : 5.9
+Category      : Session Management
+
+# ─────────────────────────────────────────────────────────────────
+# REMEDIATION
+# ─────────────────────────────────────────────────────────────────
+
+In /etc/php5/apache2/php.ini (or equivalent php.ini path):
+
+  session.cookie_httponly = 1      ; Prevents JavaScript access
+  session.cookie_secure   = 1      ; HTTPS only transmission
+  session.cookie_samesite = Strict ; Prevents CSRF
+
+Or set programmatically in PHP before session_start():
+  session_set_cookie_params([
+    'httponly' => true,
+    'secure'   => true,
+    'samesite' => 'Strict'
+  ]);
+  session_start();
+
+Verify after fix: cookie header should read:
+  Set-Cookie: PHPSESSID=...; path=/; HttpOnly; Secure; SameSite=Strict
